@@ -40,10 +40,45 @@ void setup() {
 }
 
 int incomingByte = 0;
+int testingMode = 0;
+
+
 void loop() {
   // Check if there is incoming data
+  if (SerialUSB.available() > 0) {
+    // read the incoming string until newline:
+    String incomingString = SerialUSB.readStringUntil('\n');
 
-  if (millis() - lastSendTime > sendInterval) {
+    // say what you got:
+    SerialUSB.print("I received: ");
+    SerialUSB.println(incomingString);
+
+    // Convert the incoming string to a char array
+    const char *message = incomingString.c_str();
+
+    // Send the message through the radio
+    rf95.send((uint8_t *)message, strlen(message) + 1);  // Send the message
+
+    rf95.waitPacketSent();  // Wait for the packet to be sent
+
+    digitalWrite(LED, HIGH);  // Turn on LED while sending
+    delay(100);               // Keep LED on for 100ms
+    digitalWrite(LED, LOW);   // Turn off LED
+
+    lastSendTime = millis();  // Update last send time
+  } else if (testingMode!=0) {
+    const char *testMessage = "I have no mail";
+    rf95.send((uint8_t *)testMessage, strlen(testMessage) + 1);  // Send test message
+    rf95.waitPacketSent();                                       // Wait for the packet to be sent
+
+    digitalWrite(LED, HIGH);  // Turn on LED while sending
+    delay(100);               // Keep LED on for 100ms
+    digitalWrite(LED, LOW);   // Turn off LED
+
+    lastSendTime = millis();  // Update last send time
+  }
+
+  if (testingMode != 0 && millis() - lastSendTime > sendInterval) {
     const char *testMessage = "Broadcasting Radio is on";
     rf95.send((uint8_t *)testMessage, strlen(testMessage) + 1);  // Send test message
     rf95.waitPacketSent();                                       // Wait for the packet to be sent
@@ -56,40 +91,5 @@ void loop() {
 
 
     SerialUSB.println("sent something to  Client!");
-
-
-    if (SerialUSB.available() > 0) {
-      // read the incoming string until newline:
-      String incomingString = SerialUSB.readStringUntil('\n');
-
-      // say what you got:
-      SerialUSB.print("I received: ");
-      SerialUSB.println(incomingString);
-
-      // Convert the incoming string to a char array
-      const char *message = incomingString.c_str();
-
-      // Send the message through the radio
-      rf95.send((uint8_t *)message, strlen(message) + 1);  // Send the message
-
-      rf95.waitPacketSent();  // Wait for the packet to be sent
-
-      digitalWrite(LED, HIGH);  // Turn on LED while sending
-      delay(100);               // Keep LED on for 100ms
-      digitalWrite(LED, LOW);   // Turn off LED
-
-      lastSendTime = millis();  // Update last send time
-      SerialUSB.println("yippie something to Client!");
-    } else {
-      const char *testMessage = "I have no mail";
-      rf95.send((uint8_t *)testMessage, strlen(testMessage) + 1);  // Send test message
-      rf95.waitPacketSent();                                       // Wait for the packet to be sent
-
-      digitalWrite(LED, HIGH);  // Turn on LED while sending
-      delay(100);               // Keep LED on for 100ms
-      digitalWrite(LED, LOW);   // Turn off LED
-
-      lastSendTime = millis();  // Update last send time
-    }
   }
 }
