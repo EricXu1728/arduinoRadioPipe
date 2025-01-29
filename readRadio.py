@@ -26,8 +26,7 @@ async def handler(websocket, path):
                 if ser.in_waiting > 0:
                     # Read the incoming data from the serial port
                     data = ser.readline().decode('utf-8').strip()
-                    #data = "1, "+ str(i) +",1"
-                    #i+=1
+
                     # Send the data to the WebSocket client (Vue frontend)
                     await websocket.send(data)
                     print(f"Data sent: {data}")
